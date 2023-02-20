@@ -1,10 +1,9 @@
-# path config
 root_name = 'tnseq_adaptation'
 import os, sys  ## make sure path to root of project directory
 cwd = os.getcwd(); directory_root = cwd[:cwd.index(root_name)+len(root_name)]
 sys.path.insert(0, directory_root)
-##
 from methods.config import *
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 if True:
@@ -26,9 +25,9 @@ import methods.ax_methods as ax_methods
 import methods.fitness_profiling as fp
 import methods.shared as shared
 import numpy as np; rnd = np.random.default_rng()
+import pickle
 np.seterr(invalid='ignore')
 np.seterr(all='ignore')
-import pickle
 from sklearn.cluster import AgglomerativeClustering as AgClustering
 
 def get_profile_data(bac):

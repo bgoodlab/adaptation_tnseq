@@ -11,7 +11,7 @@ BT7330_LENGTH = 6487685
 BOVATUS_LENGTH = 6472489
 GENOME_LENGTHS = {'BWH2':BWH2_LENGTH, 'BtVPI':BTVPI_LENGTH, 'Bt7330':BT7330_LENGTH, 'Bovatus':BOVATUS_LENGTH}
 
-#%%
+
 fitness_browser_data = {'BT3705':{'Heparin': (-0.4*np.log(2), -0.1*np.log(2)),
                                   'Chondroitin sulfate': (0.1*np.log(2), 0.1*np.log(2)),
                                   'Corn starch': (-1.9*np.log(2), -2.9*np.log(2), -3.0*np.log(2)),
@@ -40,8 +40,7 @@ fitness_browser_data = {'BT3705':{'Heparin': (-0.4*np.log(2), -0.1*np.log(2)),
                                              0.3*np.log(2), -0.3*np.log(2))}
                         }
 
-# Define genes (which Tn lineages qualify as part of gene)
-## Here, defined as any Tn within (start - 100, end) of gene
+# Define genes (which Tn lineages qualify as part of gene) =  (start - 100, end) of gene
 def call_conservative_gene_indices(lst_of_genes, gene_lineage_map):
     gene_lineage_indices = {}
 
@@ -139,7 +138,7 @@ def get_env_frequency_data(env_replicates, read_arrays_meta, day0_split=None):
 
     return f1_arr, D1_arr, f2_arr, D2_arr
 
-# # Get leave-one-out distributions of gene fitnesses
+# Get leave-one-out distributions of gene fitnesses
 def maxmin_freqs_over_env(freq0, depth0, freq1, depth1):
     overD0 = 1/depth0
     overD1 = 1/depth1
@@ -222,27 +221,6 @@ def calc_cg_fitness_leave_one_out(f0, f1, D0, D1, maxmin=True):
 
     return lfcs
 
-def get_leave_one_in_distributions(gene_lineage_indices_map, freqs0, freq, D0_arr, D1_arr):
-    gene_loi_lfcs = {}
-
-    if freqs0.ndim == 1:
-        for gene, indices in gene_lineage_indices_map.items():
-            f0 = freqs0[indices]
-            f1 = freq[indices]
-
-            gene_leave_one_in_lfcs = calc_cg_fitness_leave_one_in(f0, f1, D0_arr, D1_arr)
-            gene_loi_lfcs[gene] = gene_leave_one_in_lfcs
-
-    elif freqs0.ndim == 2:
-        for gene, indices in gene_lineage_indices_map.items():
-            f0 = freqs0[:, indices]
-            f1 = freq[:, indices]
-
-            gene_leave_one_in_lfcs = calc_cg_fitness_leave_one_in(f0, f1, D0_arr, D1_arr)
-            gene_loi_lfcs[gene] = gene_leave_one_in_lfcs
-
-    return gene_loi_lfcs
-
 def get_leave_one_out_distributions(gene_lineage_indices_map, freqs0, freq, D0_arr, D1_arr):
     gene_loo_lfcs = {}
 
@@ -263,7 +241,6 @@ def get_leave_one_out_distributions(gene_lineage_indices_map, freqs0, freq, D0_a
             gene_loo_lfcs[gene] = [indices, gene_leave_one_out_lfcs]
 
     return gene_loo_lfcs
-
 
 # Pass through genes and screen out likely secondary adaptive mutants
 def get_outlier_from_kmeans(loo_lfcs):
@@ -427,8 +404,7 @@ def make_env_labels(replicate_tuples):
         labels.append(label)
     return labels
 
-
-# # Get individual lineage fitness profiles
+# Get individual lineage fitness profiles
 def generate_environment_lfc_arrays(array_of_f1, array_of_D1, array_of_f2, array_of_D2, err_type='empirical'):
     fitnesses = []
     expected_rep_errs = []
@@ -530,8 +506,7 @@ def generate_mouse_replicate_profiles(env_replicates, lineage_bool, read_arrays_
     lineage_profiles_data = np.swapaxes(lineage_profiles_data, 1, 2)
     return lineage_profiles_data, lineage_profile_replicates
 
-
-### Distance measures between profiles
+# Distance measures between profiles
 
 def distance(profile1, profile2):
     min_envs = profile1.shape[0]//2 + profile1.shape[0]%2
@@ -544,7 +519,7 @@ def distance(profile1, profile2):
             return np.sqrt( np.sum((profile1[paired_mask]-profile2[paired_mask])**2) )
     else:
         return np.sqrt( np.sum((profile1-profile2)**2) )
-    
+
 def parallelized_distance(profile1, arr_of_profile2, arr_of_stds=None):
     if profile1.ndim == 2:
         distances = np.zeros( (profile1.shape[0], arr_of_profile2.shape[0]) )
@@ -556,6 +531,7 @@ def parallelized_distance(profile1, arr_of_profile2, arr_of_stds=None):
         distances = np.sqrt( np.sum( (profile1-arr_of_profile2)**2, axis=1) )
         
     return distances
+
 def get_all_pairwise_distances(profiles):
     pairwise_distances = []
     for i in range(len(profiles)-1):
@@ -564,6 +540,7 @@ def get_all_pairwise_distances(profiles):
             profile_j = profiles[j]
             pairwise_distances.append(distance(profile_i, profile_j))
     return pairwise_distances
+
 def distance_rectangular_matrices(A, B):
     """ A, B should share same column dimension"""
     distances = np.zeros( (A.shape[0], B.shape[0]) )
@@ -580,6 +557,7 @@ def format_profile_ax(ax, labels, splits=(5,10)):
     ax.set_xticks( np.arange(len(labels) ) )
     ax.set_xticklabels( labels, rotation=+45, fontsize=8, ha='right')
     ax.axhline(1, color='black', linestyle='dashed', zorder=0)
+
 def make_genome_colorbar(ax, genome_length):
     ax.set_xlim(0, 1)
     ax.set_ylim(-10**5, genome_length+10**5)
@@ -595,8 +573,7 @@ def make_genome_colorbar(ax, genome_length):
     ax.set_yticks( np.arange(10**6, genome_length, 10**6) )
     ax.set_yticklabels( np.arange(1, genome_length // 10**6 + 1,  dtype=int))
 
-### gene replicate profiling
-
+# gene replicate profiling
 def make_gene_split_profiles(gene_profile_data, f0_arr, f1_arr, D0_arr, D1_arr, exclude_indices=[]):
     include_indices = list( gene_profile_data['included_indices'] )
     for idx in exclude_indices:
@@ -681,8 +658,7 @@ def filter_gene_replicate_profiles(gene_replicate_profiles, all_gene_profile_dat
             filtered_gene_replicate_profiles[gene] = [all_profile, S1_profile, S2_profile, rep_distance]
     return filtered_gene_replicate_profiles
 
-
-###
+# Cluster bands
 def calculate_cluster_bands(rep1_profiles, rep2_profiles, percentiles=(25,75)):
     # concatenated_profiles = np.concatenate([rep1_profiles, rep2_profiles], axis=0)
 

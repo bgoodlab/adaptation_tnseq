@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np; rnd = np.random.default_rng()
 
 class Population:
   def __init__(self, barcodes, fitnesses, N_tot):
@@ -80,3 +80,9 @@ def iterate_fitness(freqs0, freqs1, Ne, T, sigma, iters = 50):
     dFitness = calc_dX_dT(freqs0, freqs1, e0=e0, e1=e1) / T
     sigma = np.sqrt( dFitness / T )
   return dFitness, sigma
+
+def double_poisson(freqs, D0, D1):
+  amplicons0 = rnd.poisson(freqs * D0)
+  reads0 = rnd.poisson(amplicons0 / amplicons0.sum() * D1)
+  freqs0 = reads0 / reads0.sum()
+  return reads0, freqs0

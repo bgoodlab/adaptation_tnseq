@@ -1,31 +1,40 @@
-import sys; sys.path.insert(0, '../../') ## make sure path to root of project directory
-from wu_barcodes.config import *
+## pickled data and functions used by almost all plot scripts
+root_name = 'tnseq_adaptation'
+import os, sys; ## make sure path to root of project directory
+cwd = os.getcwd(); directory_root = cwd[:cwd.index(root_name)+len(root_name)]
+sys.path.insert(0, directory_root)
+
+from methods.config import *
 import numpy as np
 import pickle
 
+from scipy.ndimage import uniform_filter1d
+def running_mean_uniform_filter1d(x, N):
+    return uniform_filter1d(x, N, mode='reflect', origin=0)
+
 if True:
-    with open(f'{data_dir}2/bac_lineage_positions.pkl', 'rb') as f:
+    with open(f'{data_dir}/bac_lineage_positions.pkl', 'rb') as f:
         bac_lineage_positions = pickle.load(f)
 
-    with open(f'{data_dir}2/bac_row_ids.pkl', 'rb') as f:
+    with open(f'{data_dir}/bac_row_ids.pkl', 'rb') as f:
         bac_row_ids = pickle.load(f)
 
-    with open(f'{data_dir}2/bac_read_arrays.pkl', 'rb') as f:
+    with open(f'{data_dir}/bac_read_arrays.pkl', 'rb') as f:
         bac_read_arrays = pickle.load(f)
 
-    with open(f'{data_dir}2/bac_input_arrays.pkl', 'rb') as f:
+    with open(f'{data_dir}/bac_input_arrays.pkl', 'rb') as f:
         bac_input_arrays = pickle.load(f)
 
-    with open(f'{data_dir}2/gene_meta_dict.pkl', 'rb') as f:
+    with open(f'{data_dir}/gene_meta_dict.pkl', 'rb') as f:
         bac_gene_meta_dict = pickle.load(f)
 
-    with open(f'{data_dir}2/lineage_gene_map.pkl', 'rb') as f:
+    with open(f'{data_dir}/lineage_gene_map.pkl', 'rb') as f:
         bac_lineage_gene_map = pickle.load(f)
 
-    with open(f'{data_dir}2/nonwu_indices.pkl', 'rb') as f:
+    with open(f'{data_dir}/nonwu_indices.pkl', 'rb') as f:
         bac_nonwu_indices = pickle.load(f)
 
-    with open(f'{data_dir}2/wu_genes.pkl', 'rb') as f:
+    with open(f'{data_dir}/wu_genes.pkl', 'rb') as f:
         wu_genes = pickle.load(f)
 
 def get_read_arrays(bac, mice, t0, t1, split_day0=False, notWu=None):
@@ -275,11 +284,19 @@ def calc_lfc_array(freqs0, freqs1, dt, valid=None):
     if np.any(valid):
         mask = ~valid
         freqs0, freqs1 = np.ma.masked_array(freqs0, mask), np.ma.masked_array(freqs1, mask)
-        return np.log( freqs1[valid]/freqs0[valid] ) / dt
+        return np.ma.log( freqs1[valid]/freqs0[valid] ) / dt
     else:
-        mask = (freqs0 + freqs1) == 0
+        mask = ((freqs0 == 0) + (freqs1 == 0)) > 0
         freqs0, freqs1 = np.ma.masked_array(freqs0, mask), np.ma.masked_array(freqs1, mask)
-        return np.log( freqs1/freqs0 ) / dt
+        return np.ma.log( freqs1/freqs0 ) / dt
+
+def calc_coarse_grained_lfc_array(freqs0, D0, freqs1, D1, dt, coarse_grain=100):
+    cg_freqs0 = running_mean_uniform_filter1d(freqs0, coarse_grain)
+    cg_freqs1 = running_mean_uniform_filter1d(freqs1, coarse_grain)
+
+    cg_f0, cg_f1 = maxmin_freqs(cg_freqs0, D0, cg_freqs1, D1)
+
+    return calc_lfc_array(cg_f0, cg_f1, dt)
 
 def rank_barcodes(freqs0, freqs1, dt=1, valid=None):
     fitnesses = calc_lfc_array(freqs0, freqs1, dt, valid=valid)
